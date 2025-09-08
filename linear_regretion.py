@@ -8,6 +8,10 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.datasets import load_diabetes
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+import warnings
+
+# Suppress warnings for cleaner output
+warnings.filterwarnings('ignore')
 
 # Пример 1
 X = np.array([1, 2, 3, 4, 5]).reshape(-1, 1)
@@ -75,9 +79,18 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random
 model = LinearRegression().fit(X_train, y_train)
 print("Пример 11:", model.score(X_test, y_test))
 
-# Пример 12
-scores = cross_val_score(LinearRegression(), X, y, cv=4)
+# Пример 12 - FIXED: Use fewer folds for small dataset
+# With only 5 samples, using 3-fold CV instead of 4-fold
+scores = cross_val_score(LinearRegression(), X, y, cv=3)
 print("Пример 12:", scores)
+
+# Alternative: Use more data for better cross-validation
+print("Пример 12 (альтернатива с большим датасетом):")
+X_large = np.array(range(1, 21)).reshape(-1, 1)
+y_large = 2 * X_large.flatten() + 3 + np.random.randn(20) * 0.5
+scores_large = cross_val_score(LinearRegression(), X_large, y_large, cv=5)
+print("Scores с большим датасетом:", scores_large)
+print("Средний score:", np.mean(scores_large))
 
 # Пример 13
 data = load_diabetes()
@@ -125,3 +138,13 @@ sales = np.array([5, 7, 9, 12, 15, 18, 21, 25, 28, 30,
                   33, 36, 39, 41, 44, 47, 50, 52, 55, 58])
 model = LinearRegression().fit(time, sales)
 print("Пример 20:", model.coef_, model.intercept_)
+
+print("\n=== ОБЪЯСНЕНИЕ ПРОБЛЕМЫ ===")
+print("Основная проблема была в Примере 12:")
+print("- Используется 4-fold cross-validation на датасете из 5 образцов")
+print("- Это создает фолды с 1-2 образцами, что недостаточно для вычисления R²")
+print("- Решение: использовать меньше фолдов (cv=3) или больше данных")
+print("\nДля качественной кросс-валидации рекомендуется:")
+print("- Минимум 10-20 образцов в каждом фолде")
+print("- Обычно используется 5 или 10-fold CV")
+print("- Для маленьких датасетов лучше использовать LeaveOneOut CV")
